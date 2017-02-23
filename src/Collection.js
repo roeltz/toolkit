@@ -19,6 +19,7 @@ define([
 		this.options = options || {};
 		this.resetInProgress = false;
 		this.pendingRequests = {};
+		this.failed = [];
 
 		Stateful.call(this);
 
@@ -56,15 +57,17 @@ define([
 			var pk = this.options.pk;
 			var pkv = item[pk];
 
-			if (this.options.uplink)
+			if (this.options.uplink) {
 				item[this.options.uplink[0]] = this.options.uplink[1];
-
-			if (!(item instanceof Model))
-				item = new this.options.of(item);
+			}
 
 			if (pkv in this.index) {
 				this.index[pkv].reset(item);
 				return item;
+			}
+
+			if (!(item instanceof Model)) {
+				item = new this.options.of(item);
 			}
 
 			this.items.push(item);
@@ -149,31 +152,33 @@ define([
 		get: function(id, callback) {
 			var self = this;
 
-			if (callback) {
-				if (id in this.index) {
-					setTimeout(callback, 0, this.index[id]);
-				} else if (this.source) {
-					if (this.source.ready.state() == "resolved") {
-						if (id in this.pendingRequests) {
-							this.pendingRequests[id].done(function(){
+			if (this.failed.indexOf(id) == -1) {
+				if (callback) {
+					if (id in this.index) {
+						setTimeout(callback, 0, this.index[id]);
+					} else if (this.source) {
+						if (this.source.ready.state() == "resolved") {
+							if (id in this.pendingRequests) {
+								this.pendingRequests[id].done(function(){
+									self.get(id, callback);
+								});
+							} else {
+								this.pendingRequests[id] = this.source.get(id, function(err, item){
+									if (!err && item)
+										callback(self.add(item));
+									delete self.pendingRequests[id];
+								});
+							}
+						} else {
+							this.source.ready.done(function(){
 								self.get(id, callback);
 							});
-						} else {
-							this.pendingRequests[id] = this.source.get(id, function(err, item){
-								if (!err && item)
-									callback(self.add(item));
-								delete self.pendingRequests[id];
-							});
+							this.resetFromSource();
 						}
-					} else {
-						this.source.ready.done(function(){
-							self.get(id, callback);
-						});
-						this.resetFromSource();
 					}
+				} else {
+					return this.index[id];
 				}
-			} else {
-				return this.index[id];
 			}
 		},
 
@@ -185,9 +190,15 @@ define([
 			var self = this;
 
 			if (callback) {
-				if (this.source && this.source.ready.state() == "pending") {
+				if (this.source && this.source.ready.state() == "pending" && !this._resetting) {
+					this._resetting = true;
 					this.resetFromSource(function(){
+						delete self._resetting;
 						callback(self.items.slice());
+					});
+				} else if (this._resetting) {
+					this.source.ready.then(function(){
+						self.getAll(callback);
 					});
 				} else {
 					callback(this.items.slice());
@@ -243,6 +254,10 @@ define([
 			this.settle();
 		},
 
+		map: function(options) {
+			return new MappedCollection(this, options);
+		},
+
 		matches: function(item, query) {
 			if (query) {
 				for (var property in query)
@@ -295,7 +310,7 @@ define([
 		reset: function(items) {
 			this.resetInProgress = true;
 			this.removeAll();
-			this.addAll(items);
+			this.addAll(items || []);
 			this.resetInProgress = false;
 		},
 
@@ -368,14 +383,14 @@ define([
 				this.emit("sort");
 			}
 			if (emit) {
-				chain || (chain = []);
-				chain.push(this);
-				this.emit("change", chain);
-
 				if (this.lastLength != this.length) {
 					this.emit("change-length", this.length - this.lastLength);
 					this.lastLength = this.length;
 				}
+
+				chain || (chain = []);
+				chain.push(this);
+				this.emit("change", chain);
 			}
 		},
 
@@ -392,19 +407,27 @@ define([
 
 	Stateful.extend(Collection);
 
-	function FilteredCollection(collection, options) {
-		Collection.call(this, util.defaults(options, collection.options));
+	function MappedCollection(collection, options) {
+		var self = this;
 
+		if (typeof options == "function")
+			options = {mapper: options};
+
+		Collection.call(this, options);
 		this.collection = collection;
 
 		this.collection.on("change", function(chain){
-			this.update(null, chain);
-		}.bind(this));
+			self.update(null, chain);
+		});
 
 		this.update();
 	}
 
-	FilteredCollection.prototype = {
+	MappedCollection.prototype = {
+
+		requestFilteredItems: function(callback) {
+			callback(this.collection.items.map(this.options.mapper));
+		},
 
 		update: function(query, chain) {
 			var self = this;
@@ -420,7 +443,7 @@ define([
 			var currentItems = this.items.slice();
 			this.bulkAction = true;
 
-			this.collection.find(this.options.query, function(newItems){
+			this.requestFilteredItems(function(newItems){
 				currentItems.forEach(function(item){
 					if (newItems.indexOf(item) == -1)
 						self.remove(item);
@@ -436,8 +459,21 @@ define([
 		}
 	};
 
+	function FilteredCollection(collection, options) {
+		MappedCollection.call(this, collection, util.defaults(options, collection.options));
+	}
+
+	FilteredCollection.prototype = {
+
+		requestFilteredItems: function(callback) {
+			this.collection.find(this.options.query, callback);
+		}
+	};
+
+	Collection.Mapped = MappedCollection;
 	Collection.Filtered = FilteredCollection;
-	Collection.extend(FilteredCollection);
+	Collection.extend(MappedCollection);
+	MappedCollection.extend(FilteredCollection);
 
 	return Collection;
 });

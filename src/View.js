@@ -123,7 +123,7 @@ define([
 	Watcher.extend(View);
 
 	tp.directive("subview", {preserve: true}, function(e, expr, data, options){
-		var view = new View(e, data, util.merge(options, {update: true}));
+		var view = new View(e, expr || data, util.merge(options, {update: true}));
 		options.parentView.registerSubview(view);
 		return view.e;
 	});

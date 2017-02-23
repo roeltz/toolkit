@@ -9,6 +9,8 @@ define([
 		this.options = options || {};
 		this.watches = [];
 		this.disposables = [];
+		this.intervals = [];
+		this.timeouts = [];
 	}
 
 	Watcher.extend = function(constructor) {
@@ -71,8 +73,24 @@ define([
 			this.disposables.forEach(function(d){
 				d.dispose();
 			});
+			this.intervals.forEach(function(i){
+				clearInterval(i);
+			});
+			this.timeouts.forEach(function(t){
+				clearTimeout(t);
+			});
 			this.watches = null;
 			this.disposables = null;
+			this.intervals = null;
+			this.timeouts = null;
+		},
+
+		setInterval: function() {
+			this.intervals.push(setInterval.apply(window, arguments));
+		},
+
+		setTimeout: function() {
+			this.timeouts.push(setTimeout.apply(window, arguments));
 		},
 
 		watch: function(object, event, handler, context) {

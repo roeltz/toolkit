@@ -65,15 +65,13 @@ define([
 	List.prototype = {
 
 		add: function(model) {
+			if (model[this.pk] in this.index) {
+				this.remove(this.index[model[this.pk]]);
+			}
+
 			var item = new this.options.of(this.itemTemplate, model, this.options.item);
 			this.items.push(item);
 			this.index[model[this.pk]] = item;
-
-            requestAnimationFrame(function(){
-    			this.itemContainer.appendChild(item.e);
-    			this.checkEmptiness();
-                this.settle("after-add");
-            }.bind(this), 0);
 
             if (this.isSelected(model)) {
                 this.markAsSelected(item);
@@ -85,6 +83,10 @@ define([
                 if (this.isSelected(model))
                     this.markAsSelected(item);
             }.bind(this);
+
+			this.checkEmptiness();
+			this.itemContainer.appendChild(item.e);
+            this.settle("after-add");
 
 			return item;
 		},
@@ -282,7 +284,7 @@ define([
     			this.items.splice(index, 1);
                 if (sindex != -1)
                     this.selection.splice(sindex, 1);
-    			delete this.index[item[this.pk]];
+    			delete this.index[item.model[this.pk]];
     			this.checkEmptiness();
                 this.checkSelection();
     			item.dispose();
