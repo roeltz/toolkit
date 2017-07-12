@@ -38,7 +38,7 @@ define([
 
 			if (this.options.disposable) {
 				this.options.disposable.on("dispose", function(){
-					nav.removeEventListener("click", this._nav_click);
+					this.nav.removeEventListener("click", this._nav_click);
 					window.removeEventListener("hashchange", this._hashchange);
 				}.bind(this));
 			}

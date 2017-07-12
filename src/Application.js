@@ -46,21 +46,24 @@ define([
 		},
 
 		view: function(name, options) {
+			var self = this;
 			options = options || {};
 
 			return function(entry) {
-				if (entry.view) {
-					this.viewStack.setView(entry.view);
-				} else {
-					this.viewFactory.make(name, entry, options, function(view){
-						entry.view = view;
-						this.viewStack.setView(view);
+				//if (entry.view) {
+				//	this.viewStack.setView(entry.view);
+				//} else {
+					self.viewFactory.make(name, entry, options, function(view){
+						//entry.view = view;
+						self.viewStack.reset();
+
+						self.viewStack.setView(view);
 						view.once("stale", function(){
-							this.view(name, options)(entry, true);
-						}.bind(this));
-					}.bind(this));
-				}
-			}.bind(this);
+							self.view(name, options)(entry, true);
+						});
+					});
+				//}
+			};
 		}
 	};
 

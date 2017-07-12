@@ -1,7 +1,8 @@
 define([
 	"./lib/EventEmitter",
-	"./lib/extend"
-], function(EventEmitter, extend){
+	"./lib/extend",
+	"./reader"
+], function(EventEmitter, extend, reader){
 
 	function DropZone(e, options) {
 		this.e = e;
@@ -30,12 +31,10 @@ define([
 		getFilesAsDataURLs: function(files, callback) {
 			(function step(urls, rest){
 				if (rest.length) {
-					var reader = new FileReader();
-					reader.onload = function(){
-						urls.push(reader.result);
+					reader.readAsDataURL(rest[0], function(content){
+						urls.push(content);
 						step(urls, rest.slice(1));
-					}.bind(this);
-					reader.readAsDataURL(rest[0]);
+					});
 				} else {
 					callback(urls);
 				}

@@ -19,6 +19,8 @@ define([
 	function request(method, url, data, options) {
 		var deferred = $.Deferred();
 
+		emitter.emit("start", method, url, data, options);
+
 		options = copy({
 			type: method,
 			url: url,
@@ -33,6 +35,7 @@ define([
 
 				deferred.resolve(response);
 				emitter.emit("success", response);
+				emitter.emit("end", false, response);
 			},
 			error: function(jqXHR, textStatus, errorThrown){
 				var response = null;
@@ -48,38 +51,39 @@ define([
 
 				deferred.reject(response);
 				emitter.emit("error", response);
+				emitter.emit("end", true, response);
 			},
 			xhr: function() {
-		        var xhr = $.ajaxSettings.xhr();
+				var xhr = $.ajaxSettings.xhr();
 
-		        function getInfo(event, type) {
-	                var percentage = 0;
-	                var loaded = event.loaded || event.position;
-	                var total = event.total;
+				function getInfo(event, type) {
+					var percentage = 0;
+					var loaded = event.loaded || event.position;
+					var total = event.total;
 
-	                if (event.lengthComputable) {
-	                    percentage = loaded / total * 100;
-	                }
+					if (event.lengthComputable) {
+						percentage = loaded / total * 100;
+					}
 
-		        	return {
-		        		type: type,
-		        		lengthComputable: event.lengthComputable,
-	                	loaded: loaded,
-	                	total: total,
-	                	percentage: percentage
-	               };
-		        }
+					return {
+						type: type,
+						lengthComputable: event.lengthComputable,
+						loaded: loaded,
+						total: total,
+						percentage: percentage
+				   };
+				}
 
-		        xhr.addEventListener("progress", function(event) {
-	                deferred.notify(getInfo(event, "download"));
-	            }, false);
+				xhr.addEventListener("progress", function(event) {
+					deferred.notify(getInfo(event, "download"));
+				}, false);
 
-		        if (xhr.upload) {
-		            xhr.upload.addEventListener("progress", function(event) {
-		                deferred.notify(getInfo(event, "upload"));
-		            }, false);
-		        }
-		        return xhr;
+				if (xhr.upload) {
+					xhr.upload.addEventListener("progress", function(event) {
+						deferred.notify(getInfo(event, "upload"));
+					}, false);
+				}
+				return xhr;
 			}
 		}, options || {});
 
@@ -93,9 +97,14 @@ define([
 				options.data = JSON.stringify(options.data);
 		}
 
-		$.ajax(options);
+		var jqxhr = $.ajax(options);
+		var promise = deferred.promise();
 
-		return deferred.promise();
+		promise.abort = function() {
+			jqxhr.abort();
+		};
+
+		return promise;
 	}
 
 	request.events = emitter;

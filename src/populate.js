@@ -1,8 +1,9 @@
 define([
 	"jquery",
+	"moment",
 	"./lib/util",
 	"./lib/evalNodes"
-], function($, util, evalNodes){
+], function($, moment, util, evalNodes){
 
 	var boolFalsyStrings = ["", "0", "no", "false"];
 
@@ -11,14 +12,10 @@ define([
 			setSelect($e, value);
 		} else if ($e.is("[type='checkbox'], [type='radio']")) {
 			$e.each(function(){
-				if (this.value == value
+				this.checked = (this.value == value
 					|| (value === true && boolFalsyStrings.indexOf(this.value) == -1)
 					|| (value === false && boolFalsyStrings.indexOf(this.value) != -1)
-				) {
-					$(this).attr("checked", "checked");
-				} else {
-					$(this).removeAttr("checked");
-				}
+				);
 			});
 		} else if ($e.is("input, textarea")) {
 			if (util.isObject(value) && $e.is("[type='hidden']")) {
@@ -28,8 +25,10 @@ define([
 					value = value.toISOString().replace(/T.+$/, "");
 				} else if ($e.is("[type='datetime-local']")) {
 					value = value.toISOString().replace(/:\d{2}\.\d+Z$/, "");
-				} else {
-					value = value.format($e.data("format"));
+				} else if ($e.is("[type='time']")) {
+					value = value.toISOString().replace(/^[^T]+|T|\.\d+Z$/g, "");
+				} else if ($e.data("format")) {
+					value = moment(value).format($e.data("format"));
 				}
 			}
 			$e.val(value);
@@ -65,6 +64,8 @@ define([
 		else return;
 
 		for(var prop in values) {
+			if (!values.hasOwnProperty(prop)) continue;
+
 			var value = values[prop];
 			var propattr = prefix ? prefix + "[" + prop + "]" : prop;
 			var proppath = prefix ? prefix + "." + prop : prop;
@@ -82,14 +83,15 @@ define([
 
 		$element.find("[data-expr]").each(function(){
 			var $e = $(this);
-			var expr = $e.data("expr");
-			var value = "";
-
-			try {
-				with(values) {
-					value = eval(expr);
+			var value = (function(__expr__){
+				with (this) {
+					try {
+						return eval(__expr__);
+					} catch (__ex__) {
+						return "";
+					}
 				}
-			} catch(ex) {}
+			}).call(values, $e.data("expr"));
 
 			setInput($e, value);
 		});

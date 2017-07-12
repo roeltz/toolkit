@@ -57,7 +57,7 @@ define([
 	}
 
 	function chain($source, $destination, options) {
-		$source.change(function(){
+		$($source).change(function(){
 			get($destination, {value: this.value}, options);
 		});
 	}

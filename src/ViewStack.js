@@ -15,6 +15,14 @@ define([
 
 	ViewStack.prototype = {
 
+		reset: function() {
+			if (this.currentView) {
+				this.hideView(this.currentView);
+				this.currentView.dispose();
+				this.currentView = null;
+			}
+		},
+
 		setView: function(view) {
 			if (this.currentView)
 				this.hideView(this.currentView);

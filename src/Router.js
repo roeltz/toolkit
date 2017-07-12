@@ -123,7 +123,7 @@ define([
 		},
 
 		processClick: function(e) {
-			var anchor = find(e.target, "a[href]:not([target]):not([rel='external'])");
+			var anchor = find(e.target, "a[href]:not([target]):not([rel='external']):not([download]):not([href^='javascript:'])");
 			if (anchor && e.button === 0) {
 				e.preventDefault();
 				this.dispatch(anchor.pathname);

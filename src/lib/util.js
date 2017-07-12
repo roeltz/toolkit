@@ -1,11 +1,11 @@
 (function(r, f){
 	 if (typeof define == "function" && define.amd) {
-        define(f);
-    } else if (typeof exports == "object") {
-    	module.exports = f();
-    } else {
-    	r.roeltz = f();
-    }
+		define(f);
+	} else if (typeof exports == "object") {
+		module.exports = f();
+	} else {
+		r.roeltz = f();
+	}
 })(this, function(){
 
 	var exports;
@@ -21,23 +21,23 @@
 	// Type-checking
 
 	function isArray(object){
-	    return Array.isArray ? Array.isArray(object) : object instanceof Array;
+		return Array.isArray ? Array.isArray(object) : object instanceof Array;
 	}
 
 	function isBoolean(object){
-	    return typeof object == "boolean" || object instanceof Boolean;
+		return typeof object == "boolean" || object instanceof Boolean;
 	}
 
 	function isDate(object){
-	    return object instanceof Date;
+		return object instanceof Date;
 	}
 
 	function isFunction(object){
-	    return typeof object == "function" || object instanceof Function;
+		return typeof object == "function" || object instanceof Function;
 	}
 
 	function isIterable(object){
-	    return isArray(object) || (isSomething(object) && isNumber(object.length) && !isString(object));
+		return isArray(object) || (isSomething(object) && isNumber(object.length) && !isString(object));
 	}
 
 	function isNothing(object) {
@@ -49,11 +49,11 @@
 	}
 
 	function isNumber(object){
-	    return typeof object == "number" || object instanceof Number && !isNaN(object) && isFinite(object);
+		return typeof object == "number" || object instanceof Number && !isNaN(object) && isFinite(object);
 	}
 
 	function isNumericString(object){
-	    return isNumber(parseFloat(object));
+		return isNumber(parseFloat(object));
 	}
 
 	function isObject(object, plain) {
@@ -70,15 +70,15 @@
 	}
 
 	function isScalar(object){
-	    return isString(object) || isNumber(object) || isBoolean(object);
+		return isString(object) || isNumber(object) || isBoolean(object);
 	}
 
 	function isSomething(object){
-	    return !isNull(object) && !isUndefined(object);
+		return !isNull(object) && !isUndefined(object);
 	}
 
 	function isString(object){
-	    return typeof object == "string" || object instanceof String;
+		return typeof object == "string" || object instanceof String;
 	}
 
 	function isUndefined(object) {
@@ -408,11 +408,11 @@
 
 	var cache = {};
 	var escapes = {
-		"'":      "'",
-		'\\':     '\\',
-		'\r':     'r',
-		'\n':     'n',
-		'\t':     't',
+		"'":	  "'",
+		'\\':	 '\\',
+		'\r':	 'r',
+		'\n':	 'n',
+		'\t':	 't',
 		'\u2028': 'u2028',
 		'\u2029': 'u2029'
 	};
@@ -488,11 +488,11 @@
 	// Number functions
 
 	function distance(x1, y1, x2, y2){
-	    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+		return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 	}
 
 	function deg2rad(angle){
-	    return angle * Math.PI / 180;
+		return angle * Math.PI / 180;
 	}
 
 	function fit(n, start, end) {
@@ -512,11 +512,11 @@
 	}
 
 	function rad2deg(angle){
-	    return angle * 180 / Math.PI;
+		return angle * 180 / Math.PI;
 	}
 
 	function random(min, max) {
-	    if (isNothing(max)) {
+		if (isNothing(max)) {
 			max = min;
 			min = 0;
 		}

@@ -48,6 +48,10 @@ define([
 			throw new Error("Not implemented");
 		},
 
+		traverse: function(path) {
+			return new TraverseSource(this, path);
+		},
+
 		update: function(model, callback) {
 			throw new Error("Not implemented");
 		}

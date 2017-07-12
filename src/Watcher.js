@@ -94,7 +94,9 @@ define([
 		},
 
 		watch: function(object, event, handler, context) {
-			if (arguments.length == 2) {
+			if (arguments.length >= 3 && typeof handler == "string") {
+				handler = this[handler].bind(object);
+			} else if (arguments.length == 2) {
 				handler = event;
 				event = object;
 				object = this.model;

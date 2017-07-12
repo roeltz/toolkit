@@ -1,8 +1,8 @@
 define([
    	"./lib/request",
 	"./lib/serializeObject",
-    "./lib/util",
-    "./populate",
+	"./lib/util",
+	"./populate",
 	"./View",
 	"jquery"
 ], function(request, serializeObject, util, populate, View, $){
@@ -22,19 +22,19 @@ define([
 			this.e.addEventListener("submit", this.submit.bind(this));
 		},
 
-        collectData: function(callback) {
-            var data = this.options.model ? this.model.toJSON() : serializeObject(this.e);
-            var defer = false;
-            this.emit("collect", data, function(replacement){
-                data = replacement;
-            }, function(next){
-                defer = true;
-                next(function(data){
-                    callback(data);
-                });
-            });
-            if (!defer && callback)
-                callback(data);
+		collectData: function(callback) {
+			var data = this.options.model ? this.model.toJSON() : serializeObject(this.e);
+			var defer = false;
+			this.emit("collect", data, function(replacement){
+				data = replacement;
+			}, function(next){
+				defer = true;
+				next(function(data){
+					callback(data);
+				});
+			});
+			if (!defer && callback)
+				callback(data);
 		},
 
 		dispatch: function(data) {
@@ -44,36 +44,36 @@ define([
 				this.emit("done", data);
 		},
 
-        getRequestArgs: function(data) {
-            var options = util.copy({}, this.options.request);
+		getRequestArgs: function(data) {
+			var options = util.copy({}, this.options.request);
 
-            switch (this.e.getAttribute("enctype") || this.e.enctype) {
-                case "multipart/form-data":
-                    data = data instanceof FormData ? data : new FormData(this.e);
-                    break;
-                case "application/json":
-                    options.contentType = "application/json";
-                    break;
-            }
+			switch (this.e.getAttribute("enctype") || this.e.enctype) {
+				case "multipart/form-data":
+					data = data instanceof FormData ? data : new FormData(this.e);
+					break;
+				case "application/json":
+					options.contentType = "application/json";
+					break;
+			}
 
 			return {data: data, options: options};
 		},
 
-        hintError: function(result) {
+		hintError: function(result) {
 			this.e.classList.add("submit-error");
-            this.e.dispatchEvent(new Event("submit-error", {bubbles: true, cancelable: true}));
+			this.e.dispatchEvent(new Event("submit-error", {bubbles: true, cancelable: true}));
 
 			if (this.errorElement && this.options.evaluateErrorMessage) {
 				this.errorElement.textContent = this.options.evaluateErrorMessage(result);
 			}
 		},
 
-        hintSuccess: function(result) {
+		hintSuccess: function(result) {
 			this.e.classList.add("submit-success");
-            this.e.dispatchEvent(new Event("submit-success", {bubbles: true, cancelable: true}));
+			this.e.dispatchEvent(new Event("submit-success", {bubbles: true, cancelable: true}));
 		},
 
-        prepare: function() {
+		prepare: function() {
 			this.e.classList.add("submitting");
 
 			var elementsToDisable = this.e.querySelectorAll(this.options.disableOnSubmit || "footer button");
@@ -88,7 +88,7 @@ define([
 		},
 
 		request: function(data) {
-            var args = this.getRequestArgs(data);
+			var args = this.getRequestArgs(data);
 
 			request(this.e.method, this.e.action, args.data, args.options)
 				.done(function(result){
@@ -113,7 +113,7 @@ define([
 			}
 		},
 
-        resetSuccess: function() {
+		resetSuccess: function() {
 			this.e.classList.remove("submit-success");
 		},
 
@@ -126,18 +126,18 @@ define([
 				}
 			}
 
-            if (this.options.resetAfterSubmit) {
-                this.e.reset();
-                var autofocus = this.e.querySelector("[autofocus]");
-                if (autofocus) {
-                    setTimeout(function(){
-                        autofocus.focus();
-                    }, 0);
-                }
-            }
+			if (this.options.resetAfterSubmit) {
+				this.e.reset();
+				var autofocus = this.e.querySelector("[autofocus]");
+				if (autofocus) {
+					setTimeout(function(){
+						autofocus.focus();
+					}, 0);
+				}
+			}
 		},
 
-        submit: function(ev) {
+		submit: function(ev) {
 			if (ev && ev.preventDefault)
 				ev.preventDefault();
 
@@ -146,13 +146,13 @@ define([
 
 			if (this.validate()) {
 				this.prepare();
-                this.collectData(function(data){
-                    if (this.e.action) {
-    					this.request(data);
-    				} else {
-    					this.dispatch(data);
-    				}
-                }.bind(this));
+				this.collectData(function(data){
+					if (this.e.action) {
+						this.request(data);
+					} else {
+						this.dispatch(data);
+					}
+				}.bind(this));
 			}
 		},
 

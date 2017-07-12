@@ -61,13 +61,14 @@ define([
 				item[this.options.uplink[0]] = this.options.uplink[1];
 			}
 
+			if (!(item instanceof this.options.of)) {
+				item = new this.options.of(item);
+				pkv = item[pk];
+			}
+
 			if (pkv in this.index) {
 				this.index[pkv].reset(item);
 				return item;
-			}
-
-			if (!(item instanceof Model)) {
-				item = new this.options.of(item);
 			}
 
 			this.items.push(item);
@@ -149,8 +150,13 @@ define([
 			}
 		},
 
-		get: function(id, callback) {
+		get: function(id, always, callback) {
 			var self = this;
+
+			if (typeof always == "function") {
+				callback = always;
+				always = false;
+			}
 
 			if (this.failed.indexOf(id) == -1) {
 				if (callback) {
@@ -163,10 +169,16 @@ define([
 									self.get(id, callback);
 								});
 							} else {
-								this.pendingRequests[id] = this.source.get(id, function(err, item){
-									if (!err && item)
-										callback(self.add(item));
+								this.pendingRequests[id] = this.source.get(id, function(err, itemData){
+									var item;
+
+									if (!err && itemData)
+										item = self.add(itemData);
+
 									delete self.pendingRequests[id];
+
+									if (item || always)
+										callback(item);
 								});
 							}
 						} else {
@@ -222,7 +234,6 @@ define([
 			return this.items.map(function(item){
 				return item[pk];
 			});
-			return indexes;
 		},
 
 		has: function(item) {
